@@ -29,10 +29,9 @@ The demo will illustrate how **TrustResearch** enhances research integrity by de
 ### 3. Graph-Based Citation Analysis:
 - A graph-based citation network is constructed to assess the relevance of cited works.
 - The system identifies instances of:
-  - **Citation padding**: excessive or unrelated citations used to artificially inflate impact.
-  - **Misleading references**: citations that do not support the claim they are linked to.
-  - **Citation collusion**: when a cluster of papers from the same group or network frequently cite each other without substantial relevance.  
-    **Example:** Three research groups consistently citing each other’s work to inflate metrics without contributing new or distinct ideas. TrustResearch clusters these citation patterns and lowers their credibility score.
+  - **Citation padding**: excessive or potentially unrelated citations used to artificially inflate impact, especially if the author is citing their own papers continuously.
+  - **Citation collusion**: when a cluster of papers from the same group or network frequently cite each other, potentially without substantial relevance.  
+    **Example:** Three research groups consistently citing each other’s work to inflate metrics. TrustResearch clusters these citation patterns and lowers their credibility score.
 
 ### 4. Fraud Detection and Report Generation:
 - The system generates an **integrity report** highlighting potential issues:
