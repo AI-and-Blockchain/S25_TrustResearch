@@ -5,7 +5,12 @@ Academic integrity is fundamental to the credibility of research publications. H
 
 **TrustResearch** is a novel AI and blockchain-based system designed to enhance the credibility of research publications by detecting fraudulent behavior in submitted manuscripts. The system employs AI to validate ML related research claims and uses blockchain technology for secure and immutable storage. Additionally, it utilizes graph-based citation analysis to assess the relevance of cited works, thereby identifying potentially misleading or unrelated references.
 
-**Unverifiable research claims** refer to assertions made in a manuscript that lack supporting evidence in the form of referenced artifacts, such as nanopublications, datasets provided by the author or claimed results. TrustResearch does not attempt to replicate or deeply parse the paper's content. Instead, it intends to check whether claims reference verifiable digital artifacts and flags those that do not. For example, a claim like “our method improves accuracy by 20%” would be flagged if it cannot be verifed by utilizing the same dataset, hyperparameters, and model. This keeps the validation lightweight while encouraging transparency and reproducibility. Similarly, if the citations in the paper indicate a deliberate or malicious attempt to include unrelated references, it will also be flagged.
+**Unverifiable research claims** are statements in a manuscript that cite external sources or artifacts but lack verifiable support from those sources. TrustResearch does not attempt to deeply parse or replicate the paper's content. Instead, it checks whether each claim that references a digital artifact — such as a nanopublication, dataset, or result — is actually supported by that artifact.
+
+For example, if an author claims “our method improves accuracy by 20%” and references a nanopublication or dataset, TrustResearch verifies whether those linked resources contain the stated result. If they do not — or if no artifact is linked — the claim is flagged as unverifiable. This ensures external validation is based only on **the paper’s own referenced artifacts**, keeping the system lightweight, transparent, and auditable.
+
+Additionally, TrustResearch flags **citation collusion**, which occurs when a group of papers repeatedly cite each other to artificially inflate credibility or impact. For instance, if Paper A cites B, B cites C, and C cites A — and this loop contains minimal external references — the system identifies it as a collusion cluster and lowers its citation credibility score.
+
 
 ---
 
