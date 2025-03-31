@@ -46,6 +46,18 @@ The demo will illustrate how **TrustResearch** enhances research integrity by de
 
 ---
 
+## Class Diagram
+
+![Class Diagram](Diagrams/Class%20Diagram.png)
+
+---
+
+## Sequence Diagram
+
+![Sequence Diagram](Diagrams/Sequence%20Diagram.png)
+
+---
+
 ## Expected Outcome
 - **For Researchers:** They receive feedback on their manuscript's credibility.
 - **For Reviewers:** The system simplifies fraud detection, reducing manual effort.
