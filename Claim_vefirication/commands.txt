@@ -1,0 +1,9 @@
+ipfs daemon
+ganache-cli --port 7545 --deterministic
+cd blockchain
+truffle migrate --reset
+cd backend
+python server.py
+cd frontend
+npm start
+
