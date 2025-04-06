@@ -83,9 +83,10 @@ The primary end-users of **TrustResearch** include:
 | **Josh Youngbar**        | Developing Graph-based architecture and implementing AI part for citation fraud detection. |
 
 ---
-
+<!--
 ## Team Member Coordination
 - **Meeting Time:** **Wednesday at 12:00 PM at Union.**
 
 ## Communication Channel
 - **Primary platform:** **Discord** for daily discussions and quick updates.
+-->
