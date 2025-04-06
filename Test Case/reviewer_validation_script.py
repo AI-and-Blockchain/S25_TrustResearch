@@ -111,7 +111,7 @@ if __name__ == "__main__":
     if not claimed_metrics:
         print("No metrics found in the .trig file.")
     else:
-        print("\n📊 Claimed vs Reproduced Metrics:\n")
+        print("\n Claimed vs Reproduced Metrics:\n")
         comparison = compare_metrics(claimed_metrics, reproduced_metrics)
 
         for metric, data in comparison.items():
@@ -120,11 +120,11 @@ if __name__ == "__main__":
             print(f"  Reproduced  : {data['reproduced']:.4f}")
             print(f"  Difference  : {data['difference']:.4f}")
             print(f"  % Difference: {data['percent_difference']:.2f}%")
-            print(f"  ✅ Validated" if data["valid"] else f"  ❌ Discrepancy found")
+            print(f"   Validated" if data["valid"] else f"   Discrepancy found")
             print("")
 
         if all(data['valid'] for data in comparison.values()):
-            print("✅ All metrics validated successfully.")
+            print(" All metrics validated successfully.")
         else:
-            print("⚠️ Some metrics did not match the claim.")
+            print(" Some metrics did not match the claim.")
 

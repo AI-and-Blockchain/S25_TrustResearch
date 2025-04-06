@@ -47,13 +47,13 @@ The demo will illustrate how **TrustResearch** enhances research integrity by de
 
 ## Class Diagram
 
-![Class Diagram](Diagrams/Class%20Diagram_1.png)
+![Class Diagram](Diagrams/Class%20Diagram.png)
 
 ---
 
 ## Sequence Diagram
 
-![Sequence Diagram](Diagrams/Sequence%20Diagram_1.png)
+![Sequence Diagram](Diagrams/Sequence%20Diagram.png)
 
 ---
 
