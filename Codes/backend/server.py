@@ -46,10 +46,29 @@ def upload_file():
         web3.eth.wait_for_transaction_receipt(tx)
         file_details.append(f"{file_name}: {ipfs_hash}")
 
-    with open("uploaded_files.txt", "w") as f:
+    # Write the uploaded_files.txt file
+    uploaded_file_path = "uploaded_files.txt"
+    with open(uploaded_file_path, "w") as f:
         f.write("\n".join(file_details) + "\n")
 
+    # SEND FILE TO REMOTE IP ADDRESS
+    DESTINATION_URL = "http://127.0.0.1:8080/receive-file" # Sending to localhost on PORT 8080 calling the receive-file endpoint in our journal_receiver.py server
+
+    try:
+        with open(uploaded_file_path, "rb") as file_to_send:
+            response = requests.post(
+                DESTINATION_URL,
+                files={"uploaded_files": ("uploaded_files.txt", file_to_send)},
+            )
+        if response.status_code == 200:
+            print("✅ File successfully sent to journal authority at", DESTINATION_URL)
+        else:
+            print(f"⚠️ Failed to send file. Status code: {response.status_code}")
+    except Exception as e:
+        print(f"❌ Error sending file to remote journal authority: {e}")
+
     return jsonify({'message': 'Files uploaded successfully!', 'details': file_details})
+
 
 
 @app.route("/review-validate", methods=["POST"])
