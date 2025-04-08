@@ -18,6 +18,7 @@ def extract_metrics_from_trig(trig_file_path):
 
     query = """
     PREFIX ex: <http://example.org/>
+
     SELECT ?accuracy ?precision ?recall ?f1
     WHERE {
       GRAPH ?g {
@@ -126,3 +127,4 @@ if __name__ == "__main__":
             print(" All metrics validated successfully.")
         else:
             print(" Some metrics did not match the claim.")
+

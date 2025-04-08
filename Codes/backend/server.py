@@ -41,7 +41,6 @@ def upload_file():
         else:
             return jsonify({'error': f'Failed to upload {file_name} to IPFS'}), 500
 
-        os.remove(file_path)
         tx = contract.functions.storeFile(ipfs_hash, file_name).transact({'from': web3.eth.accounts[0]})
         web3.eth.wait_for_transaction_receipt(tx)
         file_details.append(f"{file_name}: {ipfs_hash}")
@@ -67,7 +66,7 @@ def upload_file():
     except Exception as e:
         print(f"❌ Error sending file to remote journal authority: {e}")
 
-    return jsonify({'message': 'Files uploaded successfully!', 'details': file_details})
+    return jsonify({'message': 'Files uploaded successfully!', 'details': file_details}), 200
 
 
 

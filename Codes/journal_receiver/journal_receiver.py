@@ -1,13 +1,15 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
+from flask_cors import CORS 
 import os
 
 app = Flask(__name__)
+CORS(app) 
 
 @app.route('/receive-file', methods=['POST'])
 def receive_file():
-    print("📥 Received a POST to /receive-file")  # ADD THIS
+    print("📥 Received a POST to /receive-file")
     if 'uploaded_files' not in request.files:
-        return {"error": "No file found"}, 400
+        return jsonify({"error": "No file found"}), 400
 
     file = request.files['uploaded_files']
     os.makedirs("received", exist_ok=True)
@@ -15,7 +17,7 @@ def receive_file():
     file.save(save_path)
 
     print(f"✅ File received and saved at {save_path}")
-    return {"message": "File received successfully!"}, 200
+    return jsonify({"message": "✅ File received successfully!"}), 200
 
 @app.route("/")
 def home():
@@ -23,4 +25,3 @@ def home():
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8081)
-
