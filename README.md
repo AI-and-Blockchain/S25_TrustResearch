@@ -74,7 +74,7 @@ The primary end-users of **TrustResearch** include:
 
 ---
 
-Workflow of the project:
+### Workflow of the project:
 
 ---
 
