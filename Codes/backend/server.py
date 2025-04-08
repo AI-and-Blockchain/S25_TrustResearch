@@ -52,7 +52,7 @@ def upload_file():
         f.write("\n".join(file_details) + "\n")
 
     # SEND FILE TO REMOTE IP ADDRESS
-    DESTINATION_URL = "http://127.0.0.1:8080/receive-file" # Sending to localhost on PORT 8080 calling the receive-file endpoint in our journal_receiver.py server
+    DESTINATION_URL = "http://127.0.0.1:8081/receive-file"  # use the working IP
 
     try:
         with open(uploaded_file_path, "rb") as file_to_send:

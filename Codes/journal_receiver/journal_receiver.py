@@ -1,4 +1,3 @@
-# journal_receiver.py
 from flask import Flask, request
 import os
 
@@ -6,6 +5,7 @@ app = Flask(__name__)
 
 @app.route('/receive-file', methods=['POST'])
 def receive_file():
+    print("📥 Received a POST to /receive-file")  # ADD THIS
     if 'uploaded_files' not in request.files:
         return {"error": "No file found"}, 400
 
@@ -17,5 +17,10 @@ def receive_file():
     print(f"✅ File received and saved at {save_path}")
     return {"message": "File received successfully!"}, 200
 
+@app.route("/")
+def home():
+    return "✅ Hello from Journal Receiver!"
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)  # open to LAN
+    app.run(host='127.0.0.1', port=8081)
+
