@@ -14,7 +14,7 @@ Additionally, TrustResearch flags **citation collusion**, which occurs when a gr
 
 ---
 
-## What would be the “Demo” of the project?
+## What would be the Demo of the project?
 
 The demo will illustrate how **TrustResearch** enhances research integrity by detecting fraudulent claims and verifying citations. It will involve the following key steps:
 
