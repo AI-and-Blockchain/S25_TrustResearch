@@ -74,6 +74,39 @@ The primary end-users of **TrustResearch** include:
 
 ---
 
+Workflow of the project:
+
+---
+
+### Author End
+
+To upload files, select the relevant files and click **Upload**. This action will:
+- Automatically pass the paper through an AI-based citation verification system.
+- Compute a citation graph score based on detected citation structures.
+- Store all associated files on IPFS.
+- Record a cryptographic signature of the storage on the Blockchain.
+
+All storage-related metadata is automatically transmitted to the designated journal authority for verification and processing.
+
+---
+
+### Journal Authority End
+
+The journal authority can:
+- View the uploaded file names and corresponding IPFS Content Identifiers (CIDs).
+- Assign appropriate reviewers to each submission.
+- Distribute the metadata to the selected reviewers for evaluation.
+
+---
+
+### Reviewer End
+
+Each reviewer can:
+- Execute the validation code provided by the author to independently verify the submission.
+- Submit a review to the journal authority based on validation results and assessment.
+
+---
+
 ## Responsibilities of Team Members
 
 | Team Member              | Role & Responsibilities                                                                 |
