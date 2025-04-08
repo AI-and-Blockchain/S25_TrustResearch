@@ -2,7 +2,8 @@ import os
 import time
 import requests
 import subprocess
-from flask import Flask, request, jsonify
+import zipfile
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from web3 import Web3
 import json
@@ -26,7 +27,6 @@ def upload_file():
 
     files = request.files.getlist('files')
     file_details = []
-
     os.makedirs("temp", exist_ok=True)
 
     for file in files:
@@ -45,20 +45,15 @@ def upload_file():
         web3.eth.wait_for_transaction_receipt(tx)
         file_details.append(f"{file_name}: {ipfs_hash}")
 
-    # Write the uploaded_files.txt file
     uploaded_file_path = "uploaded_files.txt"
     with open(uploaded_file_path, "w") as f:
         f.write("\n".join(file_details) + "\n")
 
-    # SEND FILE TO REMOTE IP ADDRESS
-    DESTINATION_URL = "http://127.0.0.1:8081/receive-file"  # use the working IP
-
+    # Send uploaded_files.txt to remote authority (e.g., journal)
+    DESTINATION_URL = "http://127.0.0.1:8081/receive-file"  # Replace with working IP if needed
     try:
         with open(uploaded_file_path, "rb") as file_to_send:
-            response = requests.post(
-                DESTINATION_URL,
-                files={"uploaded_files": ("uploaded_files.txt", file_to_send)},
-            )
+            response = requests.post(DESTINATION_URL, files={"uploaded_files": ("uploaded_files.txt", file_to_send)})
         if response.status_code == 200:
             print("✅ File successfully sent to journal authority at", DESTINATION_URL)
         else:
@@ -69,7 +64,6 @@ def upload_file():
     return jsonify({'message': 'Files uploaded successfully!', 'details': file_details}), 200
 
 
-
 @app.route("/review-validate", methods=["POST"])
 def review_validate():
     if 'uploaded_files' not in request.files:
@@ -77,7 +71,6 @@ def review_validate():
 
     uploaded = request.files['uploaded_files']
     lines = uploaded.read().decode().splitlines()
-
     os.makedirs("temp", exist_ok=True)
     download_manifest = []
 
@@ -98,7 +91,6 @@ def review_validate():
         except Exception as e:
             return jsonify({"error": f"Error while downloading {file_name}: {str(e)}"}), 500
 
-    # Wait until all files exist and are stable in size
     def file_fully_written(path):
         size1 = os.path.getsize(path)
         time.sleep(1)
@@ -127,7 +119,6 @@ def review_validate():
             "error": f"Timeout: The following files are incomplete or still writing: {', '.join(not_ready)}"
         }), 500
 
-    # Run the validation script
     try:
         result = subprocess.run(
             ["python", "-u", "reviewer_validation_script.py"],
@@ -136,7 +127,6 @@ def review_validate():
             text=True,
             timeout=60
         )
-
 
         print("======== STDOUT ========")
         print(result.stdout)
@@ -150,16 +140,45 @@ def review_validate():
                 "stdout": result.stdout
             }), 500
 
-        if not result.stdout.strip():
-            return jsonify({
-                "error": "✅ Validation completed but script did not return any output.",
-                "stderr": result.stderr
-            }), 200
-
-        return jsonify({"output": result.stdout})
+        return jsonify({"output": result.stdout.strip() or "✅ Validation completed but script did not return any output."})
 
     except Exception as e:
         return jsonify({"error": f"Error running reviewer_validation_script.py: {e}"}), 500
+
+
+@app.route("/review-download", methods=["POST"])
+def review_download():
+    if 'uploaded_files' not in request.files:
+        return jsonify({"error": "Please upload uploaded_files.txt"}), 400
+
+    uploaded = request.files['uploaded_files']
+    lines = uploaded.read().decode().splitlines()
+    os.makedirs("temp", exist_ok=True)
+    downloaded_paths = []
+
+    for line in lines:
+        try:
+            file_name, cid = line.strip().split(": ")
+            url = f"{IPFS_GATEWAY}/{cid.strip()}"
+            path = os.path.join("temp", file_name)
+            response = requests.get(url, stream=True)
+            if response.status_code == 200:
+                with open(path, "wb") as f:
+                    for chunk in response.iter_content(8192):
+                        f.write(chunk)
+                downloaded_paths.append(path)
+            else:
+                print(f"❌ Failed to download {file_name} from IPFS.")
+        except Exception as e:
+            return jsonify({"error": f"Failed to download {file_name}: {str(e)}"}), 500
+
+    # Zip all downloaded files
+    zip_path = os.path.join("temp", "downloaded_files.zip")
+    with zipfile.ZipFile(zip_path, 'w') as zipf:
+        for file_path in downloaded_paths:
+            zipf.write(file_path, os.path.basename(file_path))
+
+    return send_file(zip_path, as_attachment=True, download_name="review_package.zip")
 
 
 if __name__ == "__main__":
