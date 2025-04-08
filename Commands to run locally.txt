@@ -6,7 +6,9 @@ truffle migrate --reset
 
 cd backend
 python server.py
-python journal_authority.py
+
+cd journal_receiver
+python journal_receiver.py
 
 cd frontend
 npm start
