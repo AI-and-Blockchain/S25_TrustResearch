@@ -20,6 +20,7 @@ contract = web3.eth.contract(address=contract_data["address"], abi=contract_data
 web3.eth.defaultAccount = web3.eth.accounts[0]
 IPFS_GATEWAY = "https://ipfs.io/ipfs"
 
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'files' not in request.files:
@@ -49,8 +50,7 @@ def upload_file():
     with open(uploaded_file_path, "w") as f:
         f.write("\n".join(file_details) + "\n")
 
-    # Send uploaded_files.txt to remote authority (e.g., journal)
-    DESTINATION_URL = "http://127.0.0.1:8081/receive-file"  # Replace with working IP if needed
+    DESTINATION_URL = "http://127.0.0.1:8081/receive-file"
     try:
         with open(uploaded_file_path, "rb") as file_to_send:
             response = requests.post(DESTINATION_URL, files={"uploaded_files": ("uploaded_files.txt", file_to_send)})
@@ -154,29 +154,54 @@ def review_download():
     uploaded = request.files['uploaded_files']
     lines = uploaded.read().decode().splitlines()
     os.makedirs("temp", exist_ok=True)
-    downloaded_paths = []
+    download_manifest = []
 
     for line in lines:
         try:
             file_name, cid = line.strip().split(": ")
             url = f"{IPFS_GATEWAY}/{cid.strip()}"
             path = os.path.join("temp", file_name)
+            download_manifest.append((file_name, url, path))
+
             response = requests.get(url, stream=True)
             if response.status_code == 200:
                 with open(path, "wb") as f:
                     for chunk in response.iter_content(8192):
                         f.write(chunk)
-                downloaded_paths.append(path)
             else:
-                print(f"❌ Failed to download {file_name} from IPFS.")
+                return jsonify({"error": f"Failed to download {file_name} from IPFS."}), 500
         except Exception as e:
-            return jsonify({"error": f"Failed to download {file_name}: {str(e)}"}), 500
+            return jsonify({"error": f"Error downloading {file_name}: {str(e)}"}), 500
 
-    # Zip all downloaded files
+    def file_fully_written(path):
+        size1 = os.path.getsize(path)
+        time.sleep(1)
+        size2 = os.path.getsize(path)
+        return size1 == size2 and size1 > 0
+
+    waited = 0
+    max_wait = 15
+    interval = 2
+    ready = False
+
+    while waited < max_wait:
+        not_ready = []
+        for _, _, path in download_manifest:
+            if not os.path.exists(path) or not file_fully_written(path):
+                not_ready.append(path)
+        if not not_ready:
+            ready = True
+            break
+        time.sleep(interval)
+        waited += interval
+
+    if not ready:
+        return jsonify({"error": f"Some files are still being written: {', '.join(not_ready)}"}), 500
+
     zip_path = os.path.join("temp", "downloaded_files.zip")
     with zipfile.ZipFile(zip_path, 'w') as zipf:
-        for file_path in downloaded_paths:
-            zipf.write(file_path, os.path.basename(file_path))
+        for _, _, path in download_manifest:
+            zipf.write(path, os.path.basename(path))
 
     return send_file(zip_path, as_attachment=True, download_name="review_package.zip")
 
