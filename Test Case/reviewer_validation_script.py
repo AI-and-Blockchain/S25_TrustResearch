@@ -2,11 +2,8 @@ import json
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from model import create_model  # Author-provided model code
-
 from rdflib import ConjunctiveGraph
 
 # ------------------------
@@ -42,42 +39,31 @@ def extract_metrics_from_trig(trig_file_path):
     return metrics
 
 # ------------------------
-# Data utilities
+# Load and prepare test dataset
 # ------------------------
-def load_dataset(path):
-    return pd.read_csv(path)
-
-def load_hyperparameters(path):
-    with open(path, 'r') as f:
-        return json.load(f)
-
-def prepare_data(dataset):
-    X = dataset.drop('species', axis=1).values
-    y = LabelEncoder().fit_transform(dataset['species'].values)
-    return train_test_split(X, y, test_size=0.2, random_state=42)
+def load_test_data(path):
+    df = pd.read_csv(path)
+    X_test = df.drop("species", axis=1).values
+    y_test = LabelEncoder().fit_transform(df["species"])
+    return X_test, y_test
 
 # ------------------------
-# Model training & evaluation
+# Run model prediction
 # ------------------------
-def train_and_evaluate(X_train, X_test, y_train, y_test, hyperparameters):
-    input_shape = X_train.shape[1:]
-    num_classes = len(np.unique(y_train))
-    model = create_model(input_shape, num_classes)
-
-    model.fit(X_train, y_train, batch_size=hyperparameters['batch_size'], epochs=hyperparameters['epochs'])
-
+def evaluate_model(model_path, X_test, y_test):
+    model = tf.keras.models.load_model(model_path)
     predictions = model.predict(X_test)
-    predicted_classes = np.argmax(predictions, axis=1)
+    y_pred = np.argmax(predictions, axis=1)
 
     return {
-        "accuracy": accuracy_score(y_test, predicted_classes),
-        "precision": precision_score(y_test, predicted_classes, average='weighted', zero_division=0),
-        "recall": recall_score(y_test, predicted_classes, average='weighted', zero_division=0),
-        "f1": f1_score(y_test, predicted_classes, average='weighted', zero_division=0)
+        "accuracy": accuracy_score(y_test, y_pred),
+        "precision": precision_score(y_test, y_pred, average='weighted', zero_division=0),
+        "recall": recall_score(y_test, y_pred, average='weighted', zero_division=0),
+        "f1": f1_score(y_test, y_pred, average='weighted', zero_division=0)
     }
 
 # ------------------------
-# Comparison
+# Compare claimed and reproduced metrics
 # ------------------------
 def compare_metrics(claimed, reproduced, tolerance=5.0):
     comparison_results = {}
@@ -94,37 +80,33 @@ def compare_metrics(claimed, reproduced, tolerance=5.0):
     return comparison_results
 
 # ------------------------
-# Main
+# Main Execution
 # ------------------------
 if __name__ == "__main__":
-    dataset_path = 'iris_dataset.csv'
-    hyperparams_path = 'hyperparameters.json'
-    trig_file_path = 'nanopub_example.trig'
+    trig_file = "nanopub_example.trig"
+    model_file = "model.h5"
+    test_file = "test_dataset.csv"
 
-    dataset = load_dataset(dataset_path)
-    hyperparams = load_hyperparameters(hyperparams_path)
-    X_train, X_test, y_train, y_test = prepare_data(dataset)
-
-    reproduced_metrics = train_and_evaluate(X_train, X_test, y_train, y_test, hyperparams)
-    claimed_metrics = extract_metrics_from_trig(trig_file_path)
-
+    claimed_metrics = extract_metrics_from_trig(trig_file)
     if not claimed_metrics:
-        print("No metrics found in the .trig file.")
+        print("No claimed metrics found in the .trig file.")
+        exit(1)
+
+    X_test, y_test = load_test_data(test_file)
+    reproduced_metrics = evaluate_model(model_file, X_test, y_test)
+    comparison = compare_metrics(claimed_metrics, reproduced_metrics)
+
+    print("\nClaimed vs Reproduced Metrics:\n")
+    for metric, data in comparison.items():
+        print(f"{metric.capitalize()}:")
+        print(f"  Claimed     : {data['claimed']:.4f}")
+        print(f"  Reproduced  : {data['reproduced']:.4f}")
+        print(f"  Difference  : {data['difference']:.4f}")
+        print(f"  % Difference: {data['percent_difference']:.2f}%")
+        print(f"  Validated" if data["valid"] else f"  Discrepancy found")
+        print("")
+
+    if all(data["valid"] for data in comparison.values()):
+        print("All metrics validated successfully.")
     else:
-        print("\n Claimed vs Reproduced Metrics:\n")
-        comparison = compare_metrics(claimed_metrics, reproduced_metrics)
-
-        for metric, data in comparison.items():
-            print(f"{metric.capitalize()}:")
-            print(f"  Claimed     : {data['claimed']:.4f}")
-            print(f"  Reproduced  : {data['reproduced']:.4f}")
-            print(f"  Difference  : {data['difference']:.4f}")
-            print(f"  % Difference: {data['percent_difference']:.2f}%")
-            print(f"   Validated" if data["valid"] else f"   Discrepancy found")
-            print("")
-
-        if all(data['valid'] for data in comparison.values()):
-            print(" All metrics validated successfully.")
-        else:
-            print(" Some metrics did not match the claim.")
-
+        print("Some metrics did not match the claim.")
