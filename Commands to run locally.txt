@@ -1,16 +1,16 @@
 ipfs daemon
 ganache-cli --port 7545 --deterministic
 
-cd blockchain
+cd Codes/blockchain
 truffle migrate --reset
 
-cd backend
+cd Codes/backend
 python server.py
 
-cd journal_receiver
+cd Codes/journal_receiver
 python journal_receiver.py
 
-cd frontend
+cd Codes/frontend
 npm start
 
 
