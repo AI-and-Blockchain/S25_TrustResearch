@@ -10,7 +10,10 @@ python server.py
 cd Codes/journal_receiver
 python journal_receiver.py
 
-cd Codes/frontend
+cd Codes/frontend/author
+npm start
+
+cd Codes/frontend/reviewer
 npm start
 
 
