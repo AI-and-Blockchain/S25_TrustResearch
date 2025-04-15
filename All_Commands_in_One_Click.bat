@@ -1,32 +1,31 @@
 @echo off
+echo Starting IPFS daemon...
+start cmd /k "ipfs daemon"
 
-echo Starting IPFS Daemon...
-start powershell -NoExit -Command "ipfs daemon"
-timeout /t 1 > nul
+echo Starting Ganache...
+start cmd /k "ganache-cli --port 7545 --deterministic"
 
-echo Starting Ganache CLI...
-start powershell -NoExit -Command "ganache-cli --port 7545 --deterministic"
-timeout /t 4 > nul  REM Wait 4 seconds before Truffle
+timeout /t 5 > nul
 
-echo Running Truffle Migrations...
-start powershell -NoExit -Command "cd Codes/blockchain; truffle migrate --reset"
-timeout /t 1 > nul
+echo Running Truffle migration...
+cd Codes\blockchain
+call truffle migrate --reset
 
 echo Starting Backend Server...
-start powershell -NoExit -Command "cd Codes/backend; python server.py"
-timeout /t 1 > nul
+cd ..\backend
+start cmd /k "python server.py"
 
 echo Starting Journal Receiver...
-start powershell -NoExit -Command "cd Codes/journal_receiver; python journal_receiver.py"
-timeout /t 1 > nul
+cd ..\journal_receiver
+start cmd /k "python journal_receiver.py"
 
-echo Starting Frontend - Author...
-start powershell -NoExit -Command "cd Codes/frontend/author; npm start"
-timeout /t 1 > nul
+echo Starting Frontend (Author)...
+cd ..\frontend\author
+start cmd /k "npm start"
 
-echo Starting Frontend - Reviewer...
-start powershell -NoExit -Command "cd Codes/frontend/reviewer; npm start"
-timeout /t 1 > nul
+echo Starting Frontend (Reviewer) on port 3001...
+cd ..\reviewer
+start cmd /k "set PORT=3001 && npm start"
 
-echo All processes started.
+echo All commands initiated.
 pause

@@ -81,7 +81,7 @@ function App() {
 
   const handleSendToJournal = async () => {
     if (!reviewFile) {
-      return setMessage("⚠️ Please upload a .txt review file to send.");
+      return setMessage("⚠️ Please upload a review file to send.");
     }
 
     const formData = new FormData();
