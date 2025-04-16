@@ -1,5 +1,5 @@
 {
-  "contractName": "FileStorage",
+  "contractName": "ReviewFeedbackTracker",
   "abi": [
     {
       "anonymous": false,
@@ -7,7 +7,7 @@
         {
           "indexed": true,
           "internalType": "address",
-          "name": "uploader",
+          "name": "reviewer",
           "type": "address"
         },
         {
@@ -21,26 +21,27 @@
           "internalType": "string",
           "name": "fileName",
           "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
         }
       ],
-      "name": "FileUploaded",
+      "name": "FeedbackSubmitted",
       "type": "event",
-      "signature": "0x2f82310531f67ec4eae39b4f0d4e2ea9a5e6da4bb8f084adb414ec441b761c5d"
+      "signature": "0xb4fab602968d0905326921098f30b140ca12d3031067a0b6aa75ca1bc890f65f"
     },
     {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        },
         {
           "internalType": "uint256",
           "name": "",
           "type": "uint256"
         }
       ],
-      "name": "userFiles",
+      "name": "feedbacks",
       "outputs": [
         {
           "internalType": "string",
@@ -54,14 +55,19 @@
         },
         {
           "internalType": "address",
-          "name": "uploader",
+          "name": "reviewer",
           "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
       "type": "function",
       "constant": true,
-      "signature": "0x718f38a6"
+      "signature": "0x2bb8b0dc"
     },
     {
       "inputs": [
@@ -76,21 +82,15 @@
           "type": "string"
         }
       ],
-      "name": "storeFile",
+      "name": "submitFeedback",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function",
-      "signature": "0x20de1070"
+      "signature": "0x1af31b7f"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_user",
-          "type": "address"
-        }
-      ],
-      "name": "getFiles",
+      "inputs": [],
+      "name": "getAllFeedbacks",
       "outputs": [
         {
           "components": [
@@ -106,11 +106,16 @@
             },
             {
               "internalType": "address",
-              "name": "uploader",
+              "name": "reviewer",
               "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "timestamp",
+              "type": "uint256"
             }
           ],
-          "internalType": "struct FileStorage.FileData[]",
+          "internalType": "struct ReviewFeedbackTracker.Feedback[]",
           "name": "",
           "type": "tuple[]"
         }
@@ -118,8 +123,8 @@
       "stateMutability": "view",
       "type": "function",
       "constant": true,
-      "signature": "0x433bf37b"
+      "signature": "0x5fa01010"
     }
   ],
-  "address": "0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab"
+  "address": "0x5b1869D9A4C187F2EAa108f3062412ecf0526b24"
 }

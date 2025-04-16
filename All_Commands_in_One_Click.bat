@@ -7,11 +7,11 @@ timeout /t 1 > nul
 
 echo Starting Ganache...
 start powershell -NoExit -Command "ganache-cli --port 7545 --deterministic"
-timeout /t 1 > nul
+timeout /t 2 > nul
 
 echo Migrating Truffle contracts...
 start powershell -NoExit -Command "cd 'Codes/blockchain'; timeout /t 4; truffle migrate --reset"
-timeout /t 1 > nul
+timeout /t 3 > nul
 
 echo Starting backend server...
 start powershell -NoExit -Command "cd 'Codes/backend'; python server.py"
