@@ -8,10 +8,10 @@
 # Assertion graph
 ex:nanopub1 {
   ex:model1 
-      ex:hasAccuracy "0.9991"^^xsd:float ;
-      ex:hasPrecision "0.99"^^xsd:float ;
-      ex:hasRecall "0.99"^^xsd:float ;
-      ex:hasF1Score "0.99"^^xsd:float ;
+      ex:hasAccuracy "0.9474"^^xsd:float ;
+      ex:hasPrecision "0.9474"^^xsd:float ;
+      ex:hasRecall "0.9474"^^xsd:float ;
+      ex:hasF1Score "0.9474"^^xsd:float ;
       ex:evaluatedOn ex:dataset1 .
 }
 

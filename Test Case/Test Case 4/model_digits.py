@@ -1,58 +1,81 @@
-print("🚀 Starting model_digits.py with CNN...")
+print("🚀 Starting model_digits.py...")
 
 import os
 import json
 import numpy as np
 import pandas as pd
 from PIL import Image
-from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.models import load_model
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+import re
+
+# === Trig updater ===
+def write_metrics_to_trig(metrics, template_path="nanopub_example.trig", output_path="nanopub_example.trig"):
+    try:
+        with open(template_path, "r", encoding="utf-8") as f:
+            trig = f.read()
+
+        trig = trig.replace(
+            re.search(r'ex:hasAccuracy\s+"[\d.]+"', trig).group(0),
+            f'ex:hasAccuracy "{metrics["accuracy"]:.4f}"'
+        )
+        trig = trig.replace(
+            re.search(r'ex:hasPrecision\s+"[\d.]+"', trig).group(0),
+            f'ex:hasPrecision "{metrics["precision"]:.4f}"'
+        )
+        trig = trig.replace(
+            re.search(r'ex:hasRecall\s+"[\d.]+"', trig).group(0),
+            f'ex:hasRecall "{metrics["recall"]:.4f}"'
+        )
+        trig = trig.replace(
+            re.search(r'ex:hasF1Score\s+"[\d.]+"', trig).group(0),
+            f'ex:hasF1Score "{metrics["f1"]:.4f}"'
+        )
+
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(trig)
+
+        print(f"✅ Updated trig written to {output_path}")
+    except Exception as e:
+        print("❌ Failed to write updated trig:", e)
 
 # === Config ===
 IMG_SIZE = (28, 28)
 IMG_SHAPE = (28, 28, 1)
 DATA_DIR = "digits_updated"
-MODEL_FILE = "model.h5"
-TEST_FILE = "test_dataset.csv"
-HYPERPARAM_FILE = "hyperparameters.json"
 
 # === Load images ===
-X = []
-y = []
+X, y = [], []
 
 print("📂 Loading digit images...")
 for label in sorted(os.listdir(DATA_DIR)):
-    folder = os.path.join(DATA_DIR, label)
-    if not os.path.isdir(folder):
+    label_path = os.path.join(DATA_DIR, label)
+    if not os.path.isdir(label_path):
         continue
-    for filename in os.listdir(folder):
-        if filename.endswith(".png"):
-            path = os.path.join(folder, filename)
+    for img_file in os.listdir(label_path):
+        if img_file.endswith(".png"):
+            path = os.path.join(label_path, img_file)
             try:
                 img = Image.open(path).convert("L").resize(IMG_SIZE)
                 img_arr = np.array(img).astype("float32") / 255.0
                 X.append(img_arr.reshape(28, 28, 1))
                 y.append(int(label))
             except Exception as e:
-                print(f"⚠️ Error loading {path}: {e}")
+                print(f"⚠️ Could not load {path}: {e}")
 
 X = np.array(X)
 y = np.array(y)
-print(f"✅ Loaded {X.shape[0]} images of shape {X.shape[1:]}")
-
-# === Encode labels ===
 y_cat = to_categorical(y, num_classes=10)
+print(f"✅ Loaded {len(X)} images.")
 
 # === Split ===
 X_train, X_test, y_train, y_test = train_test_split(X, y_cat, test_size=0.2, random_state=42)
-print("✅ Dataset split into train/test sets.")
 
-# === Build CNN model ===
-print("⚙️ Building CNN model...")
+# === CNN model ===
 model = Sequential([
     Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=IMG_SHAPE),
     MaxPooling2D(pool_size=(2, 2)),
@@ -63,37 +86,39 @@ model = Sequential([
     Dropout(0.5),
     Dense(10, activation='softmax')
 ])
-
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-print("✅ Model compiled.")
-
-# === Train model ===
-print("⏳ Training CNN...")
-model.fit(X_train, y_train, epochs=10, batch_size=32,
-          validation_split=0.1, callbacks=[EarlyStopping(patience=3)])
-print("✅ Model trained.")
-
-# === Save model ===
-model.save(MODEL_FILE)
-print(f"✅ CNN model saved as {MODEL_FILE}")
+model.fit(X_train, y_train, epochs=10, batch_size=32, validation_split=0.1, callbacks=[EarlyStopping(patience=2)])
+model.save("model.h5")
+print("✅ CNN model saved.")
 
 # === Save test dataset ===
 X_test_flat = X_test.reshape(X_test.shape[0], -1)
-test_labels = np.argmax(y_test, axis=1)
+y_test_int = np.argmax(y_test, axis=1)
 test_df = pd.DataFrame(X_test_flat, columns=[f"pixel_{i}" for i in range(X_test_flat.shape[1])])
-test_df["label"] = test_labels
-test_df.to_csv(TEST_FILE, index=False)
-print(f"✅ Test dataset saved as {TEST_FILE}")
+test_df["label"] = y_test_int
+test_df.to_csv("test_dataset.csv", index=False)
+print("✅ Test dataset saved.")
 
 # === Save hyperparameters ===
-with open(HYPERPARAM_FILE, "w") as f:
+with open("hyperparameters.json", "w") as f:
     json.dump({
         "model": "CNN",
-        "input_shape": IMG_SHAPE,
-        "image_size": IMG_SIZE,
-        "epochs": 10,
-        "batch_size": 32
+        "image_shape": IMG_SHAPE,
+        "batch_size": 32,
+        "epochs": 10
     }, f, indent=2)
-print(f"✅ Hyperparameters saved as {HYPERPARAM_FILE}")
+print("✅ Hyperparameters saved.")
 
+# === Evaluate and update trig ===
+y_pred_prob = model.predict(X_test)
+y_pred = y_pred_prob.argmax(axis=1)
+
+metrics = {
+    "accuracy": accuracy_score(y_test_int, y_pred),
+    "precision": precision_score(y_test_int, y_pred, average="weighted", zero_division=0),
+    "recall": recall_score(y_test_int, y_pred, average="weighted", zero_division=0),
+    "f1": f1_score(y_test_int, y_pred, average="weighted", zero_division=0)
+}
+
+write_metrics_to_trig(metrics)
 print("🎉 All steps completed successfully.")
