@@ -1,0 +1,14 @@
+{
+  "model": "CNN",
+  "input_shape": [
+    28,
+    28,
+    1
+  ],
+  "image_size": [
+    28,
+    28
+  ],
+  "epochs": 10,
+  "batch_size": 32
+}
