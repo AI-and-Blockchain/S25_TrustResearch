@@ -14,7 +14,10 @@ cd Codes/frontend/author
 npm start
 
 cd Codes/frontend/reviewer
-set PORT=3001 && npm start      
+set PORT=3001 && npm start
+
+cd Codes/frontend/authority
+npm start      
 
 
 

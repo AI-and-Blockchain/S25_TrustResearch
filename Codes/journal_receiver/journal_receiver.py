@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from web3 import Web3
 from datetime import datetime
+import shutil
 
 app = Flask(__name__)
 CORS(app)
@@ -97,6 +98,29 @@ def receive_file():
         print(f"❌ Error during IPFS or Blockchain operation: {e}")
         return jsonify({"error": f"Internal error: {e}"}), 500
 
+
+
+
+@app.route("/list-accounts", methods=["GET"])
+def list_accounts():
+    return jsonify(web3.eth.accounts)
+
+@app.route("/assign-reviewer", methods=["POST"])
+def assign_reviewer():
+    reviewer_address = request.form.get("reviewer_address")
+    source_file = "received/uploaded_files.txt"
+    
+    if not reviewer_address or not os.path.exists(source_file):
+        return jsonify({"error": "Missing reviewer address or file"}), 400
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    new_name = f"manifest_for_{reviewer_address[:6]}_{timestamp}.txt"
+    dest_path = os.path.join("assigned_manifests", new_name)
+    os.makedirs("assigned_manifests", exist_ok=True)
+    shutil.copy(source_file, dest_path)
+
+    print(f"✅ Manifest assigned to reviewer {reviewer_address}: {new_name}")
+    return jsonify({"message": f"Reviewer {reviewer_address} assigned successfully!"})
 
 if __name__ == "__main__":
     app.run(port=8081, debug=True)

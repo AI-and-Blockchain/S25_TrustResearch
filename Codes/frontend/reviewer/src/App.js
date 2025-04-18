@@ -7,12 +7,19 @@ function App() {
   const [message, setMessage] = useState("");
   const [output, setOutput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [reviewFile, setReviewFile] = useState(null);  // <-- NEW
+  const [reviewFile, setReviewFile] = useState(null);
 
+  // ⬇️ Accept any .txt manifest and rename it as uploaded_files.txt
   const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
-    setMessage("");
-    setOutput("");
+    const uploaded = event.target.files[0];
+    if (uploaded) {
+      const renamedFile = new File([uploaded], "uploaded_files.txt", {
+        type: uploaded.type,
+      });
+      setFile(renamedFile);
+      setMessage("");
+      setOutput("");
+    }
   };
 
   const handleReviewFileChange = (event) => {
@@ -105,7 +112,7 @@ function App() {
   return (
     <div className="reviewer-container">
       <h2>📄 Reviewer Claim Validation</h2>
-      <input type="file" onChange={handleFileChange} />
+      <input type="file" onChange={handleFileChange} accept=".txt" />
       <div className="button-group">
         <button onClick={handleValidate} disabled={isLoading}>
           {isLoading ? "Validating..." : "Run Validation"}

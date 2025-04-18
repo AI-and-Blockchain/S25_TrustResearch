@@ -27,6 +27,11 @@ timeout /t 1 > nul
 
 echo Starting reviewer frontend on port 3001...
 start powershell -NoExit -Command "cd 'Codes/frontend/reviewer'; $env:PORT=3001; npm start"
+timeout /t 1 > nul
+
+echo Starting authority frontend on port 3002...
+start powershell -NoExit -Command "cd 'Codes/frontend/authority'; $env:PORT=3002; npm start"
+
 
 endlocal
 exit
