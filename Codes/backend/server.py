@@ -21,6 +21,57 @@ web3.eth.defaultAccount = web3.eth.accounts[0]
 IPFS_GATEWAY = "https://ipfs.io/ipfs"
 
 
+def download_files_from_manifest(lines):
+    os.makedirs("temp", exist_ok=True)
+    download_manifest = []
+
+    for line in lines:
+        try:
+            file_name, cid = line.strip().split(": ")
+            url = f"{IPFS_GATEWAY}/{cid.strip()}"
+            path = os.path.join("temp", file_name)
+            download_manifest.append((file_name, url, path))
+
+            response = requests.get(url, stream=True, timeout=300)
+            if response.status_code == 200:
+                with open(path, "wb") as f:
+                    for chunk in response.iter_content(8192):
+                        f.write(chunk)
+            else:
+                raise Exception(f"Failed to download {file_name} (HTTP {response.status_code})")
+
+        except Exception as e:
+            raise Exception(f"Error downloading {file_name}: {str(e)}")
+
+    def file_fully_written(path):
+        size1 = os.path.getsize(path)
+        time.sleep(1.5)
+        size2 = os.path.getsize(path)
+        return size1 == size2 and size1 > 0
+
+    waited = 0
+    max_wait = 30
+    interval = 3
+    ready = False
+
+    while waited < max_wait:
+        not_ready = []
+        for _, _, path in download_manifest:
+            if not os.path.exists(path) or not file_fully_written(path):
+                not_ready.append(path)
+        if not not_ready:
+            ready = True
+            break
+        print(f"⏳ Waiting for files to complete: {', '.join(not_ready)}")
+        time.sleep(interval)
+        waited += interval
+
+    if not ready:
+        raise Exception(f"Timeout: Some files are still being written: {', '.join(not_ready)}")
+
+    return download_manifest
+
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'files' not in request.files:
@@ -66,58 +117,24 @@ def upload_file():
 
 @app.route("/review-validate", methods=["POST"])
 def review_validate():
+    import shutil
+
+    # Clear temp/ before starting
+    if os.path.exists("temp"):
+        shutil.rmtree("temp")
+    os.makedirs("temp", exist_ok=True)
+
+    
     if 'uploaded_files' not in request.files:
         return jsonify({"error": "Please upload uploaded_files.txt"}), 400
 
     uploaded = request.files['uploaded_files']
     lines = uploaded.read().decode().splitlines()
-    os.makedirs("temp", exist_ok=True)
-    download_manifest = []
 
-    for line in lines:
-        try:
-            file_name, cid = line.strip().split(": ")
-            url = f"{IPFS_GATEWAY}/{cid.strip()}"
-            path = os.path.join("temp", file_name)
-            download_manifest.append((file_name, url, path))
-
-            response = requests.get(url, stream=True)
-            if response.status_code == 200:
-                with open(path, "wb") as f:
-                    for chunk in response.iter_content(8192):
-                        f.write(chunk)
-            else:
-                print(f"❌ Initial download failed for {file_name}")
-        except Exception as e:
-            return jsonify({"error": f"Error while downloading {file_name}: {str(e)}"}), 500
-
-    def file_fully_written(path):
-        size1 = os.path.getsize(path)
-        time.sleep(1)
-        size2 = os.path.getsize(path)
-        return size1 == size2 and size1 > 0
-
-    waited = 0
-    max_wait = 15
-    interval = 2
-    ready = False
-
-    while waited < max_wait:
-        not_ready = []
-        for _, _, path in download_manifest:
-            if not os.path.exists(path) or not file_fully_written(path):
-                not_ready.append(path)
-        if not not_ready:
-            ready = True
-            break
-        print(f"⏳ Waiting for files to finish writing: {', '.join(not_ready)}")
-        time.sleep(interval)
-        waited += interval
-
-    if not ready:
-        return jsonify({
-            "error": f"Timeout: The following files are incomplete or still writing: {', '.join(not_ready)}"
-        }), 500
+    try:
+        download_manifest = download_files_from_manifest(lines)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
     try:
         result = subprocess.run(
@@ -153,50 +170,11 @@ def review_download():
 
     uploaded = request.files['uploaded_files']
     lines = uploaded.read().decode().splitlines()
-    os.makedirs("temp", exist_ok=True)
-    download_manifest = []
 
-    for line in lines:
-        try:
-            file_name, cid = line.strip().split(": ")
-            url = f"{IPFS_GATEWAY}/{cid.strip()}"
-            path = os.path.join("temp", file_name)
-            download_manifest.append((file_name, url, path))
-
-            response = requests.get(url, stream=True)
-            if response.status_code == 200:
-                with open(path, "wb") as f:
-                    for chunk in response.iter_content(8192):
-                        f.write(chunk)
-            else:
-                return jsonify({"error": f"Failed to download {file_name} from IPFS."}), 500
-        except Exception as e:
-            return jsonify({"error": f"Error downloading {file_name}: {str(e)}"}), 500
-
-    def file_fully_written(path):
-        size1 = os.path.getsize(path)
-        time.sleep(1)
-        size2 = os.path.getsize(path)
-        return size1 == size2 and size1 > 0
-
-    waited = 0
-    max_wait = 15
-    interval = 2
-    ready = False
-
-    while waited < max_wait:
-        not_ready = []
-        for _, _, path in download_manifest:
-            if not os.path.exists(path) or not file_fully_written(path):
-                not_ready.append(path)
-        if not not_ready:
-            ready = True
-            break
-        time.sleep(interval)
-        waited += interval
-
-    if not ready:
-        return jsonify({"error": f"Some files are still being written: {', '.join(not_ready)}"}), 500
+    try:
+        download_manifest = download_files_from_manifest(lines)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
     zip_path = os.path.join("temp", "downloaded_files.zip")
     with zipfile.ZipFile(zip_path, 'w') as zipf:

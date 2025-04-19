@@ -38,9 +38,9 @@ function App() {
         style={{ marginLeft: 10 }}
       >
         <option value="">-- Choose --</option>
-        {accounts.map(addr => (
+        {accounts.map((addr, index) => (
           <option key={addr} value={addr}>
-            {addr}
+            Reviewer {index + 1}: {addr}
           </option>
         ))}
       </select>

@@ -60,31 +60,35 @@ function App() {
   };
 
   const handleDownload = async () => {
-    if (!file) {
-      setMessage("⚠️ Please upload the uploaded_files.txt first.");
-      return;
-    }
+	  if (!file) {
+		setMessage("⚠️ Please upload the uploaded_files.txt first.");
+		return;
+	  }
 
-    const formData = new FormData();
-    formData.append("uploaded_files", file);
+	  const formData = new FormData();
+	  formData.append("uploaded_files", file);
 
-    try {
-      const response = await axios.post("http://127.0.0.1:5000/review-download", formData, {
-        responseType: "blob",
-      });
+	  setMessage("⏳ Downloading files...");
+	  
+	  try {
+		const response = await axios.post("http://127.0.0.1:5000/review-download", formData, {
+		  responseType: "blob",
+		});
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "downloaded_files.zip");
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setMessage("✅ Files downloaded successfully.");
-    } catch (error) {
-      setMessage("❌ File download failed.");
-    }
-  };
+		const url = window.URL.createObjectURL(new Blob([response.data]));
+		const link = document.createElement("a");
+		link.href = url;
+		link.setAttribute("download", "downloaded_files.zip");
+		document.body.appendChild(link);
+		link.click();
+		link.remove();
+
+		setMessage("✅ Files downloaded successfully.");
+	  } catch (error) {
+		setMessage("❌ File download failed.");
+	  }
+	};
+
 
   const handleSendToJournal = async () => {
     if (!reviewFile) {

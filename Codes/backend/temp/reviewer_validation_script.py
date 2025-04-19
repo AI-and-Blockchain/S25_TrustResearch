@@ -31,9 +31,14 @@ def extract_metrics_from_trig(trig_file_path):
 
 def load_test_data(path):
     df = pd.read_csv(path)
+
+    # Drop rows where label is NaN
+    df = df.dropna(subset=["label"])
+
     X_test = df.drop("label", axis=1).values
     y_test = df["label"].values
     return X_test, y_test
+
 
 def evaluate_model(model_path, X_test, y_test):
     model = joblib.load(model_path)
