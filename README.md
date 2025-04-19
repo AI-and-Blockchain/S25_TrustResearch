@@ -23,8 +23,8 @@ The demo will illustrate how **TrustResearch** enhances research integrity by de
 - The manuscript alogn with claims, datasets, and other related contents are stored securely on **IPFS**, with a hash recorded on the **Ethereum blockchain** for tamper-proof verification.
 
 ### 2. Automated Claim Validation:
-- The system extracts key claims from the nanopublication and validates by running the validation code on corresponding datasets, modela and hyperparameters.
-- 
+- The system extracts key claims from the nanopublication and validates by running the validation code on corresponding datasets, model and hyperparameters.
+  
 ### 3. Graph-Based Citation Analysis:
 - A graph-based citation network is constructed to assess the relevance of cited works.
 - The system identifies instances of:
@@ -40,7 +40,7 @@ The demo will illustrate how **TrustResearch** enhances research integrity by de
 - Reviewers can access **AI-driven insights** to assist in their evaluation.
 
 ### 5. Blockchain-Based Transparency:
-- Once a paper is verified, its metadata (**author details, verification results**) is stored securely on the blockchain, ensuring immutability.
+- Once a paper is verified, its metadata (**reviewers' comments, verification results**) is stored securely on the blockchain, ensuring immutability.
 - Reviewers and journal editors can retrieve verification records to maintain research credibility.
 
 ---
@@ -103,6 +103,7 @@ The journal authority can:
 
 Each reviewer can:
 - Execute the validation code provided by the author to independently verify the submission.
+- Can download the files for manual checking.
 - Submit a review to the journal authority based on validation results and assessment.
 
 ---
