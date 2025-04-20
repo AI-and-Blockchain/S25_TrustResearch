@@ -7,9 +7,17 @@ from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from web3 import Web3
 import json
+from citation_graph import citationGraphEvaluator
 
 app = Flask(__name__)
 CORS(app)
+
+# create citationGraphEvaluator object
+current_file_path = os.path.abspath(__file__)
+current_directory = os.path.dirname(current_file_path)
+relative_path = "../citation_graph/model.pth"
+model_path = os.path.join(current_directory, relative_path)
+citationEvaluator = citationGraphEvaluator(model_path)
 
 # Load smart contract metadata
 with open("contract_data.json", "r") as f:
@@ -80,6 +88,17 @@ def upload_file():
     files = request.files.getlist('files')
     file_details = []
     os.makedirs("temp", exist_ok=True)
+
+    # perform citation analysis
+    paperDetails = {'title': '', 'authors': [], 'references': []}
+    # TO DO: add data from nanopublication to this paperDetails object.
+    #   the references here should be strings of ids relating to the papers that the paper submitted
+    #   references. These can be ARXIGV, DOI, or even urls (I think).
+    score = citationEvaluator.evaluateGraph(paperDetails)
+    if not score:
+        print("Error evaluating the references of this paper")
+        return jsonify({'error': 'Failed to evaluate the references of this paper'}), 500
+    # TO DO: write the score into the appropriate file to be seen by the Journal Authority
 
     for file in files:
         file_name = file.filename
