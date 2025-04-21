@@ -6,7 +6,7 @@ const App = () => {
     const [files, setFiles] = useState([]);
     const [message, setMessage] = useState("");
     const [cidList, setCidList] = useState([]);
-    const [reviewNotes, setReviewNotes] = useState("");
+    const [isUploading, setIsUploading] = useState(false);  // ✅ New state
 
     const handleFileChange = (event) => {
         setFiles(event.target.files);
@@ -25,6 +25,9 @@ const App = () => {
         }
 
         try {
+            setIsUploading(true);               // ✅ Start loading
+            setMessage("⏳ Uploading files..."); // ✅ Show uploading message
+
             const response = await axios.post("http://127.0.0.1:5000/upload", formData);
             setMessage(response.data.message);
             if (response.data.details) {
@@ -37,6 +40,8 @@ const App = () => {
         } catch (error) {
             setMessage("❌ Upload failed.");
             setCidList([]);
+        } finally {
+            setIsUploading(false); // ✅ Stop loading
         }
     };
 
@@ -44,7 +49,11 @@ const App = () => {
         <div className="App">
             <h2>📤 Author Upload</h2>
             <input type="file" onChange={handleFileChange} multiple />
-            <button onClick={handleUpload}>Upload</button>
+            <button onClick={handleUpload} disabled={isUploading}>
+                {isUploading ? "Uploading..." : "Upload"}
+            </button>
+
+            {message && <p className="message">{message}</p>}
 
             {cidList.length > 0 && (
                 <div className="cid-box">

@@ -37,7 +37,8 @@ with open("contract_data.json", "r") as f:
 web3 = Web3(Web3.HTTPProvider("http://127.0.0.1:7545"))
 contract = web3.eth.contract(address=contract_data["address"], abi=contract_data["abi"])
 web3.eth.defaultAccount = web3.eth.accounts[0]
-IPFS_GATEWAY = "https://ipfs.io/ipfs"
+#IPFS_GATEWAY = "https://ipfs.io/ipfs"
+IPFS_GATEWAY = "http://127.0.0.1:8080/ipfs"  # local IPFS gateway
 
 
 def download_files_from_manifest(lines):

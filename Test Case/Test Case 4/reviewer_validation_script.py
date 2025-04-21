@@ -68,30 +68,30 @@ if __name__ == "__main__":
     model_file = "model.h5"
     test_file = "test_dataset.csv"
 
-    print("📥 Extracting claimed metrics from:", trig_file)
+    print(" Extracting claimed metrics from:", trig_file)
     claimed = extract_metrics_from_trig(trig_file)
     if not claimed:
-        print("❌ No metrics found in RDF nanopub.")
+        print(" No metrics found in RDF nanopub.")
         exit(1)
 
-    print("📊 Loading test dataset:", test_file)
+    print(" Loading test dataset:", test_file)
     X_test, y_test = load_test_data(test_file)
-    print(f"✅ Loaded {len(X_test)} test samples")
+    print(f" Loaded {len(X_test)} test samples")
 
-    print("🧠 Evaluating model:", model_file)
+    print(" Evaluating model:", model_file)
     reproduced = evaluate_model(model_file, X_test, y_test)
 
-    print("📐 Comparing reproduced metrics to claimed ones...")
+    print(" Comparing reproduced metrics to claimed ones...")
     comparison = compare_metrics(claimed, reproduced)
 
-    print("\n🔎 Metric Comparison Report:")
+    print("\n Metric Comparison Report:")
     for k, v in comparison.items():
         print(f"{k.upper()}:")
         print(f"  Claimed     : {v['claimed']:.4f}")
         print(f"  Reproduced  : {v['reproduced']:.4f}")
         print(f"  Difference  : {v['difference']:.4f}")
         print(f"  % Difference: {v['percent_difference']:.2f}%")
-        print("  ✅ Validated" if v["valid"] else "  ❌ Discrepancy")
+        print("   Validated" if v["valid"] else "   Discrepancy")
         print("")
 
-    print("🎯 Validation complete.")
+    print(" Validation complete.")
