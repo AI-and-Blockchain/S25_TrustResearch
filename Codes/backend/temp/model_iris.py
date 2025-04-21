@@ -1,15 +1,16 @@
-print("🚀 Starting model_cancer.py...")
+print("🚀 Starting model_iris.py...")
 
 import os
 import json
 import joblib
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import re
 
+# Trig updater included here
 import re
 
 def write_metrics_to_trig(metrics, template_path="nanopub_example.trig", output_path="nanopub_example.trig"):
@@ -29,16 +30,14 @@ def write_metrics_to_trig(metrics, template_path="nanopub_example.trig", output_
     except Exception as e:
         print("❌ Failed to update trig file:", e)
 
-
-df = pd.read_csv("cancer_dataset.csv")
-df = df.drop(columns=["id"])
-X = df.drop(columns=["diagnosis"])
-y = LabelEncoder().fit_transform(df["diagnosis"])
+df = pd.read_csv("iris.csv")
+X = df.drop(columns=["species"])
+y = df["species"].values
 
 X = StandardScaler().fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-model = DecisionTreeClassifier(max_depth=5)
+model = RandomForestClassifier(n_estimators=50)
 model.fit(X_train, y_train)
 joblib.dump(model, "model.h5")
 
@@ -47,7 +46,7 @@ test_df["label"] = y_test
 test_df.to_csv("test_dataset.csv", index=False)
 
 with open("hyperparameters.json", "w") as f:
-    json.dump({"max_depth": 5}, f, indent=2)
+    json.dump({"model": "RandomForestClassifier", "n_estimators": 50}, f, indent=2)
 
 y_pred = model.predict(X_test)
 metrics = {

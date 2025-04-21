@@ -7,42 +7,40 @@
 @prefix pav: <http://purl.org/pav/> .
 @prefix dc: <http://purl.org/dc/elements/1.1/> .
 
-ex:nanopub_1 a np:Nanopublication ;
-    np:hasAssertion ex:nanopub_1_assertion ;
-    np:hasProvenance ex:nanopub_1_provenance ;
-    np:hasPublicationInfo ex:nanopub_1_pubinfo .
+ex:nanopub_2 a np:Nanopublication ;
+    np:hasAssertion ex:nanopub_2_assertion ;
+    np:hasProvenance ex:nanopub_2_provenance ;
+    np:hasPublicationInfo ex:nanopub_2_pubinfo .
 
-ex:nanopub_1_assertion {
+ex:nanopub_2_assertion {
     ex:paperA ex:hasResult ex:result1 .
 
-    ex:paperA cito:cites "arXiv:1409.0473" .
-    ex:paperA cito:cites "arXiv:1609.08144" .
-    ex:paperA cito:cites "arXiv:1512.08756" .
-    ex:paperA cito:cites "arXiv:1607.06450" .
-    ex:paperA cito:cites "arXiv:1703.03130" .
-    ex:paperA cito:cites "arXiv:1409.3215" .
-    ex:paperA cito:cites "arXiv:1611.04558" .
-    ex:paperA cito:cites "arXiv:1609.08144" .
-    ex:paperA cito:cites "arXiv:1706.03762" .
+    ex:paperA cito:cites "DOI:10.1145/1182635.1164174" .
+    ex:paperA cito:cites "DOI:10.1109/TKDE.2006.157" .
+    ex:paperA cito:cites "DOI:10.1145/1322432.1322456" .
+    ex:paperA cito:cites "DOI:10.1109/TKDE.2012.35" .
+    ex:paperA cito:cites "DOI:10.1109/TKDE.2020.3020810" .
+    ex:paperA cito:cites "DOI:10.1109/TKDE.2018.2810896" .
+    ex:paperA cito:cites "DOI:10.1109/ICDE.2003.1260807" .
 
-    ex:model1 ex:hasAccuracy "0.9474"^^xsd:float ;
-              ex:hasPrecision "0.9474"^^xsd:float ;
-              ex:hasRecall "0.9474"^^xsd:float ;
-              ex:hasF1Score "0.9474"^^xsd:float ;
+    ex:model1 ex:hasAccuracy "0.924"^^xsd:float ;
+              ex:hasPrecision "0.921"^^xsd:float ;
+              ex:hasRecall "0.925"^^xsd:float ;
+              ex:hasF1Score "0.923"^^xsd:float ;
               ex:evaluatedOn ex:testdata1 .
 }
 
-ex:nanopub_1_provenance {
+ex:nanopub_2_provenance {
     ex:model1 prov:wasGeneratedBy ex:evaluation1 .
     ex:evaluation1 prov:used ex:testdata1 .
     ex:model1 a ex:Model ;
-        dct:identifier "model_attention.h5" .
+        dct:identifier "model_skyline.h5" .
     ex:testdata1 a ex:Dataset ;
         dct:identifier "test_dataset.csv" .
 }
 
-ex:nanopub_1_pubinfo {
-    ex:paperA dct:creator "Ashish Vaswani" .
-    ex:nanopub_1 dct:created "2024-04-21"^^xsd:date .
-    ex:nanopub_1 pav:authoredBy <https://orcid.org/0000-0001-2345-6789> .
+ex:nanopub_2_pubinfo {
+    ex:paperA dct:creator "Yuanyuan Zhang" .
+    ex:nanopub_2 dct:created "2024-04-21"^^xsd:date .
+    ex:nanopub_2 pav:authoredBy <https://orcid.org/0000-0002-3456-7890> .
 }
