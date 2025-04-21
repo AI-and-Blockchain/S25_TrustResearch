@@ -39,10 +39,7 @@ def load_test_data(path):
 
 def evaluate_model(model_path, X_test, y_test):
     model = load_model(model_path)
-
-    # Reshape flattened X_test to image tensor shape
     X_test = X_test.reshape((-1, 28, 28, 1)).astype("float32")
-
     y_pred_prob = model.predict(X_test)
     y_pred = np.argmax(y_pred_prob, axis=1)
     return {
@@ -51,7 +48,6 @@ def evaluate_model(model_path, X_test, y_test):
         "recall": recall_score(y_test, y_pred, average='weighted', zero_division=0),
         "f1": f1_score(y_test, y_pred, average='weighted', zero_division=0)
     }
-
 
 def compare_metrics(claimed, reproduced, tolerance=5.0):
     comparison = {}

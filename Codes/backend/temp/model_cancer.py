@@ -1,15 +1,13 @@
-print("🚀 Starting model_diabetes.py...")
+print("🚀 Starting model_cancer.py...")
 
 import os
 import json
 import joblib
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-import re
-
 import re
 
 import re
@@ -32,14 +30,15 @@ def write_metrics_to_trig(metrics, template_path="nanopub_example.trig", output_
         print("❌ Failed to update trig file:", e)
 
 
-df = pd.read_csv("diabetes.csv")
-X = df.drop(columns=["Outcome"])
-y = df["Outcome"].values
+df = pd.read_csv("cancer_dataset.csv")
+df = df.drop(columns=["id"])
+X = df.drop(columns=["diagnosis"])
+y = LabelEncoder().fit_transform(df["diagnosis"])
 
 X = StandardScaler().fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-model = RandomForestClassifier(n_estimators=100)
+model = DecisionTreeClassifier(max_depth=5)
 model.fit(X_train, y_train)
 joblib.dump(model, "model.h5")
 
@@ -48,7 +47,7 @@ test_df["label"] = y_test
 test_df.to_csv("test_dataset.csv", index=False)
 
 with open("hyperparameters.json", "w") as f:
-    json.dump({"model": "RandomForestClassifier", "n_estimators": 100}, f, indent=2)
+    json.dump({"max_depth": 5}, f, indent=2)
 
 y_pred = model.predict(X_test)
 metrics = {

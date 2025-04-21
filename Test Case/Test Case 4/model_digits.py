@@ -1,6 +1,7 @@
 print("🚀 Starting model_digits.py...")
 
 import os
+import zipfile
 import json
 import numpy as np
 import pandas as pd
@@ -13,47 +14,43 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import re
 
-# === Trig updater ===
+# === TRIG UPDATE ===
 def write_metrics_to_trig(metrics, template_path="nanopub_example.trig", output_path="nanopub_example.trig"):
     try:
         with open(template_path, "r", encoding="utf-8") as f:
             trig = f.read()
 
-        trig = trig.replace(
-            re.search(r'ex:hasAccuracy\s+"[\d.]+"', trig).group(0),
-            f'ex:hasAccuracy "{metrics["accuracy"]:.4f}"'
-        )
-        trig = trig.replace(
-            re.search(r'ex:hasPrecision\s+"[\d.]+"', trig).group(0),
-            f'ex:hasPrecision "{metrics["precision"]:.4f}"'
-        )
-        trig = trig.replace(
-            re.search(r'ex:hasRecall\s+"[\d.]+"', trig).group(0),
-            f'ex:hasRecall "{metrics["recall"]:.4f}"'
-        )
-        trig = trig.replace(
-            re.search(r'ex:hasF1Score\s+"[\d.]+"', trig).group(0),
-            f'ex:hasF1Score "{metrics["f1"]:.4f}"'
-        )
+        trig = re.sub(r'ex:hasAccuracy\s+"[\d.]+"', f'ex:hasAccuracy "{metrics["accuracy"]:.4f}"', trig)
+        trig = re.sub(r'ex:hasPrecision\s+"[\d.]+"', f'ex:hasPrecision "{metrics["precision"]:.4f}"', trig)
+        trig = re.sub(r'ex:hasRecall\s+"[\d.]+"', f'ex:hasRecall "{metrics["recall"]:.4f}"', trig)
+        trig = re.sub(r'ex:hasF1Score\s+"[\d.]+"', f'ex:hasF1Score "{metrics["f1"]:.4f}"', trig)
 
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(trig)
 
         print(f"✅ Updated trig written to {output_path}")
     except Exception as e:
-        print("❌ Failed to write updated trig:", e)
+        print("❌ Failed to update trig file:", e)
 
-# === Config ===
+# === CONFIG ===
+ZIP_FILE = "digits_updated.zip"
+UNZIPPED_FOLDER = "digits_updated"
 IMG_SIZE = (28, 28)
 IMG_SHAPE = (28, 28, 1)
-DATA_DIR = "digits_updated"
+
+# === UNZIP DATASET ===
+if not os.path.exists(UNZIPPED_FOLDER):
+    print(f"📦 Unzipping {ZIP_FILE}...")
+    with zipfile.ZipFile(ZIP_FILE, 'r') as zip_ref:
+        zip_ref.extractall(".")
+    print("✅ Unzipping complete.")
+else:
+    print("📁 Dataset folder already exists.")
 
 # === Load images ===
 X, y = [], []
-
-print("📂 Loading digit images...")
-for label in sorted(os.listdir(DATA_DIR)):
-    label_path = os.path.join(DATA_DIR, label)
+for label in sorted(os.listdir(UNZIPPED_FOLDER)):
+    label_path = os.path.join(UNZIPPED_FOLDER, label)
     if not os.path.isdir(label_path):
         continue
     for img_file in os.listdir(label_path):
@@ -70,12 +67,11 @@ for label in sorted(os.listdir(DATA_DIR)):
 X = np.array(X)
 y = np.array(y)
 y_cat = to_categorical(y, num_classes=10)
-print(f"✅ Loaded {len(X)} images.")
 
 # === Split ===
 X_train, X_test, y_train, y_test = train_test_split(X, y_cat, test_size=0.2, random_state=42)
 
-# === CNN model ===
+# === Build CNN ===
 model = Sequential([
     Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=IMG_SHAPE),
     MaxPooling2D(pool_size=(2, 2)),
@@ -111,7 +107,7 @@ print("✅ Hyperparameters saved.")
 
 # === Evaluate and update trig ===
 y_pred_prob = model.predict(X_test)
-y_pred = y_pred_prob.argmax(axis=1)
+y_pred = np.argmax(y_pred_prob, axis=1)
 
 metrics = {
     "accuracy": accuracy_score(y_test_int, y_pred),
@@ -119,6 +115,5 @@ metrics = {
     "recall": recall_score(y_test_int, y_pred, average="weighted", zero_division=0),
     "f1": f1_score(y_test_int, y_pred, average="weighted", zero_division=0)
 }
-
 write_metrics_to_trig(metrics)
 print("🎉 All steps completed successfully.")
