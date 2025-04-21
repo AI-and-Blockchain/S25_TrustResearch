@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 import requests
 from collections import defaultdict
-from citationFraudDetector import CitationFraudDetector
+from .citationFraudDetector import CitationFraudDetector
 
 class CitationGraphEvaluator:
   def __init__(self, model_path):

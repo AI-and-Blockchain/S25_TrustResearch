@@ -18,30 +18,17 @@ def write_metrics_to_trig(metrics, template_path="nanopub_example.trig", output_
         with open(template_path, "r", encoding="utf-8") as f:
             trig = f.read()
 
-        trig = trig.replace(
-            re.search(r'ex:hasAccuracy\s+"[\d.]+"', trig).group(0),
-            f'ex:hasAccuracy "{metrics["accuracy"]:.4f}"'
-        )
-        trig = trig.replace(
-            re.search(r'ex:hasPrecision\s+"[\d.]+"', trig).group(0),
-            f'ex:hasPrecision "{metrics["precision"]:.4f}"'
-        )
-        trig = trig.replace(
-            re.search(r'ex:hasRecall\s+"[\d.]+"', trig).group(0),
-            f'ex:hasRecall "{metrics["recall"]:.4f}"'
-        )
-        trig = trig.replace(
-            re.search(r'ex:hasF1Score\s+"[\d.]+"', trig).group(0),
-            f'ex:hasF1Score "{metrics["f1"]:.4f}"'
-        )
+        trig = re.sub(r'ex:hasAccuracy\s+"[\d.]+"', f'ex:hasAccuracy "{metrics["accuracy"]:.4f}"', trig)
+        trig = re.sub(r'ex:hasPrecision\s+"[\d.]+"', f'ex:hasPrecision "{metrics["precision"]:.4f}"', trig)
+        trig = re.sub(r'ex:hasRecall\s+"[\d.]+"', f'ex:hasRecall "{metrics["recall"]:.4f}"', trig)
+        trig = re.sub(r'ex:hasF1Score\s+"[\d.]+"', f'ex:hasF1Score "{metrics["f1"]:.4f}"', trig)
 
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(trig)
 
         print(f"✅ Updated trig written to {output_path}")
     except Exception as e:
-        print("❌ Failed to write updated trig:", e)
-
+        print("❌ Failed to update trig file:", e)
 
 df = pd.read_csv("iris.csv")
 X = df.drop(columns=["species"])

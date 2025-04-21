@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import requests
 import subprocess
@@ -7,7 +8,14 @@ from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from web3 import Web3
 import json
-from citation_graph import citationGraphEvaluator
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from citation_graph.citationGraphEvaluator import CitationGraphEvaluator
+from citation_graph.citationFraudDetector import CitationFraudDetector  # Already used inside
+
+
 
 app = Flask(__name__)
 CORS(app)
@@ -17,7 +25,10 @@ current_file_path = os.path.abspath(__file__)
 current_directory = os.path.dirname(current_file_path)
 relative_path = "../citation_graph/model.pth"
 model_path = os.path.join(current_directory, relative_path)
-citationEvaluator = citationGraphEvaluator(model_path)
+citationEvaluator = CitationGraphEvaluator(model_path)
+
+
+
 
 # Load smart contract metadata
 with open("contract_data.json", "r") as f:
@@ -58,7 +69,7 @@ def download_files_from_manifest(lines):
         return size1 == size2 and size1 > 0
 
     waited = 0
-    max_wait = 30
+    max_wait = 100
     interval = 3
     ready = False
 
@@ -89,22 +100,85 @@ def upload_file():
     file_details = []
     os.makedirs("temp", exist_ok=True)
 
-    # perform citation analysis
-    paperDetails = {'title': '', 'authors': [], 'references': []}
-    # TO DO: add data from nanopublication to this paperDetails object.
-    #   the references here should be strings of ids relating to the papers that the paper submitted
-    #   references. These can be ARXIGV, DOI, or even urls (I think).
-    score = citationEvaluator.evaluateGraph(paperDetails)
-    if not score:
-        print("Error evaluating the references of this paper")
-        return jsonify({'error': 'Failed to evaluate the references of this paper'}), 500
-    # TO DO: write the score into the appropriate file to be seen by the Journal Authority
+    trig_path = None
+    file_map = {}  # {filename: full_path}
 
+    # Step 1: Save all uploaded files locally and detect .trig
     for file in files:
         file_name = file.filename
         file_path = os.path.join("temp", file_name)
         file.save(file_path)
+        file_map[file_name] = file_path
+        if file_name.endswith(".trig"):
+            trig_path = file_path
 
+    
+    
+    # ============================ #
+    # ✅ Citation Score Evaluation #
+    # ============================ #
+    if trig_path:
+        try:
+            import rdflib
+            g = rdflib.ConjunctiveGraph()
+            g.parse(trig_path, format="trig")
+
+            from rdflib.namespace import DCTERMS
+            from rdflib import Namespace
+
+            ex = Namespace("http://example.org/")
+            cito = Namespace("http://purl.org/spar/cito/")
+
+            paper_uri = ex.paperA
+            title = "Title not available"
+            authors = []
+            references = []
+
+            # ✅ Extract authors
+            for s, p, o in g.triples((paper_uri, DCTERMS.creator, None)):
+                authors.append(str(o))
+
+            # ✅ Extract literal references directly (DOI, arXiv, etc.)
+            for s, p, o in g.triples((paper_uri, cito.cites, None)):
+                references.append(str(o))
+
+            paperDetails = {
+                "title": title,
+                "authors": authors,
+                "references": references
+            }
+
+            citation_score = citationEvaluator.evaluateGraph(paperDetails)
+            if citation_score is not None:
+                score_text_path = os.path.join("temp", "citation_score.txt")
+                with open(score_text_path, "w") as f:
+                    f.write(f"Citation Fraud Score: {round(citation_score * 100, 2)}%\n")
+
+                # Upload score file to IPFS
+                with open(score_text_path, "rb") as f:
+                    response = requests.post("http://127.0.0.1:5001/api/v0/add", files={"file": f})
+                if response.status_code == 200:
+                    ipfs_hash = response.json()["Hash"]
+                    tx = contract.functions.storeFile(ipfs_hash, "citation_score.txt").transact({'from': web3.eth.accounts[0]})
+                    web3.eth.wait_for_transaction_receipt(tx)
+                    file_details.append(f"citation_score.txt: {ipfs_hash}")
+
+                print(f"✅ Citation fraud score saved: {citation_score}")
+
+        except Exception as e:
+            print(f"❌ Error during citation fraud analysis: {e}")
+
+
+
+    
+    
+    
+    
+    
+    
+    
+    # Step 3: Upload all files to IPFS and store on blockchain
+    for file_name, file_path in file_map.items():
         with open(file_path, "rb") as f:
             response = requests.post("http://127.0.0.1:5001/api/v0/add", files={"file": f})
         if response.status_code == 200:
@@ -115,11 +189,14 @@ def upload_file():
         tx = contract.functions.storeFile(ipfs_hash, file_name).transact({'from': web3.eth.accounts[0]})
         web3.eth.wait_for_transaction_receipt(tx)
         file_details.append(f"{file_name}: {ipfs_hash}")
+    file_details.sort(key=lambda x: x.startswith("citation_score.txt"))
 
+    # Step 4: Write manifest (uploaded_files.txt)
     uploaded_file_path = "uploaded_files.txt"
     with open(uploaded_file_path, "w") as f:
         f.write("\n".join(file_details) + "\n")
 
+    # Step 5: Send to journal authority
     DESTINATION_URL = "http://127.0.0.1:8081/receive-file"
     try:
         with open(uploaded_file_path, "rb") as file_to_send:
@@ -132,6 +209,8 @@ def upload_file():
         print(f"❌ Error sending file to remote journal authority: {e}")
 
     return jsonify({'message': 'Files uploaded successfully!', 'details': file_details}), 200
+
+
 
 
 @app.route("/review-validate", methods=["POST"])
